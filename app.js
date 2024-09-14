@@ -9,6 +9,13 @@ app.use(cors())
 app.use(express.json())
 mongoose.connect("mongodb+srv://annajose:annajose01@cluster0.d4hgr.mongodb.net/streetlightdb?retryWrites=true&w=majority&appName=Cluster0")
 
+// user
+// login
+const generateHashedPassword=async (password)=>{
+    const salt=await bcrypt.genSalt(10)
+    return bcrypt.hash(password,salt)
+}
+
 
 
 

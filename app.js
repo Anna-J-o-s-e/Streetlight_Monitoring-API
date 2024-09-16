@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs") //encryption
 
 const { usersmodel } = require("./models/user")
 const{organizationsmodel}=require("./models/organization")
+const {adminsmodel}=require("./models/admin")
 
 const app = express()
 app.use(cors())
@@ -19,6 +20,45 @@ const generateHashedPassword = async (password) => {
     const salt = await bcrypt.genSalt(10)
     return bcrypt.hash(password, salt)
 }
+// admin signup
+app.post("/adminsignup",async(req,res)=>{
+    let input=req.body
+    let hashedPassword=await generateHashedPassword(input.apassword)
+    console.log(hashedPassword)
+    input.apassword=hashedPassword
+    let admin=new adminsmodel(input)
+    admin.save()
+    res.json({"status":"success"})
+})
+// admin login
+//user login
+app.post("/adminlogin", (req, res) => {
+    let input = req.body
+    adminsmodel.find({ "amail": req.body.amail }).then((response) => {
+        if (response.length > 0) {
+            let dbaPassword = response[0].apassword
+            console.log(dbaPassword)
+            bcrypt.compare(input.apassword, dbaPassword, (error, isMatch) => {
+                if (isMatch) {
+                    jwt.sign({ email: input.amail }, "user-app", { expiresIn: "1d" }, (error, token) => {
+                        if (error) {
+                            res.json({ "status": "Unable To create Token" })
+                        } else {
+                            res.json({ "status": "success", "userId": response[0]._id, "token": token })
+                        }
+                    })
+
+                } else {
+                    res.json({ "status": "Incorrect Password" })
+                }
+            })
+        } else {
+            res.json({ "status": "User Not Found" })
+        }
+    }).catch()
+})
+
+
 // user signup
 app.post("/usersignup",async(req,res)=>{
     let input=req.body
@@ -57,6 +97,18 @@ app.post("/userlogin", (req, res) => {
     }).catch()
 })
 
+//organization
+//organization signup
+app.post("/organizationsignup",async(req,res)=>{
+    let input=req.body
+    let hashPassword=await generateHashedPassword(input.opassword)
+    console.log(hashPassword)
+    input.opassword=hashPassword
+    let organization=new organizationsmodel(input)
+    organization.save()
+    res.json({"status":"success"})
+})
+
 //organization login
 app.post("/organizationlogin", (req, res) => {
     let input = req.body
@@ -83,6 +135,9 @@ app.post("/organizationlogin", (req, res) => {
         }
     }).catch()
 })
+
+
+
 
 app.listen(8080, () => {
     console.log("server started")

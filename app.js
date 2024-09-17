@@ -8,6 +8,7 @@ const { usersmodel } = require("./models/user")
 const{organizationsmodel}=require("./models/organization")
 const {adminsmodel}=require("./models/admin")
 const {feedbacksmodel}=require("./models/feedback")
+const {addstreetlightsmodel}=require("./models/addstreetlight")
 
 const app = express()
 app.use(cors())
@@ -136,6 +137,7 @@ app.post("/organizationlogin", (req, res) => {
     }).catch()
 })
 
+// feedback
 app.post("/feedback",(req,res)=>{
     let input=req.body
     console.log(input)
@@ -144,6 +146,15 @@ app.post("/feedback",(req,res)=>{
     res.json({"status":"success"})
 })
 
+// add street light
+app.post("/addstreetlight",(req,res)=>{
+    let input=req.body
+    console.log(input)
+    let addstreetlight=new addstreetlightsmodel(input)
+    addstreetlight.save()
+    res.json({"status":"success"})
+
+})
 
 app.listen(8080, () => {
     console.log("server started")

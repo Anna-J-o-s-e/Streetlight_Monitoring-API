@@ -7,13 +7,14 @@ const bcrypt = require("bcryptjs") //encryption
 const { usersmodel } = require("./models/user")
 const{organizationsmodel}=require("./models/organization")
 const {adminsmodel}=require("./models/admin")
+const {feedbacksmodel}=require("./models/feedback")
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 mongoose.connect("mongodb+srv://annajose:annajose01@cluster0.d4hgr.mongodb.net/streetlightdb?retryWrites=true&w=majority&appName=Cluster0")
 
-// user
+
 // hashed password generator
 
 const generateHashedPassword = async (password) => {
@@ -31,7 +32,6 @@ app.post("/adminsignup",async(req,res)=>{
     res.json({"status":"success"})
 })
 // admin login
-//user login
 app.post("/adminlogin", (req, res) => {
     let input = req.body
     adminsmodel.find({ "amail": req.body.amail }).then((response) => {
@@ -136,7 +136,13 @@ app.post("/organizationlogin", (req, res) => {
     }).catch()
 })
 
-
+app.post("/feedback",(req,res)=>{
+    let input=req.body
+    console.log(input)
+    let feedback=new feedbacksmodel(input)
+    feedback.save()
+    res.json({"status":"success"})
+})
 
 
 app.listen(8080, () => {

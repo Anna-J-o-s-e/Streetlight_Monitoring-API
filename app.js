@@ -9,6 +9,8 @@ const{organizationsmodel}=require("./models/organization")
 const {adminsmodel}=require("./models/admin")
 const {feedbacksmodel}=require("./models/feedback")
 const {addstreetlightsmodel}=require("./models/addstreetlight")
+const { queriesmodel } = require("./models/query")
+const { addrepliesmodel } = require("./models/addreply")
 
 const app = express()
 app.use(cors())
@@ -155,6 +157,27 @@ app.post("/addstreetlight",(req,res)=>{
     res.json({"status":"success"})
 
 })
+
+//requests
+app.post("/queries",(req,res)=>{
+    let input=req.body
+    console.log(input)
+    let query=new queriesmodel(input)
+    query.save()
+    res.json({"status":"success"})
+
+})
+
+//addreply
+app.post("/addreply",(req,res)=>{
+    let input=req.body
+    console.log(input)
+    let addreply=new addrepliesmodel(input)
+    addreply.save()
+    res.json({"status":"success"})
+
+})
+
 
 app.listen(8080, () => {
     console.log("server started")

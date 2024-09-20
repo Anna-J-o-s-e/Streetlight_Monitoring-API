@@ -60,6 +60,16 @@ app.post("/adminlogin", (req, res) => {
         }
     }).catch()
 })
+app.get("/viewadmin",(req,res)=>{
+    adminsmodel.find().then(
+      (data)=>{
+          res.json(data)
+      }
+    ).catch((error)=>{
+  
+      res.json(error)
+    })  
+  })
 
 
 // user signup
@@ -100,6 +110,17 @@ app.post("/userlogin", (req, res) => {
     }).catch()
 })
 
+app.get("/viewusers",(req,res)=>{
+    usersmodel.find().then(
+      (data)=>{
+          res.json(data)
+      }
+    ).catch((error)=>{
+  
+      res.json(error)
+    })  
+  })
+
 //organization
 //organization signup
 app.post("/organizationsignup",async(req,res)=>{
@@ -139,6 +160,17 @@ app.post("/organizationlogin", (req, res) => {
     }).catch()
 })
 
+app.get("/vieworganization",(req,res)=>{
+    organizationsmodel.find().then(
+      (data)=>{
+          res.json(data)
+      }
+    ).catch((error)=>{
+  
+      res.json(error)
+    })  
+  })
+
 // feedback
 app.post("/addfeedback",(req,res)=>{
     let input=req.body
@@ -169,15 +201,35 @@ app.post("/addstreetlight",(req,res)=>{
     res.json({"status":"success"})
 
 })
+app.get("/viewstreetlight", (req, res) => {
+    addstreetlightsmodel.find().then(
+        (data) => {
+            res.json(data)
+        }
+    ).catch((error) => {
+        res.json(error)
+    })
+})
+
 
 //requests
-app.post("/queries",(req,res)=>{
+app.post("/addqueries",(req,res)=>{
     let input=req.body
     console.log(input)
     let query=new queriesmodel(input)
     query.save()
     res.json({"status":"success"})
 
+})
+
+app.get("/viewqueries", (req, res) => {
+    queriesmodel.find().then(
+        (data) => {
+            res.json(data)
+        }
+    ).catch((error) => {
+        res.json(error)
+    })
 })
 
 //addreply
@@ -188,6 +240,15 @@ app.post("/addreply",(req,res)=>{
     addreply.save()
     res.json({"status":"success"})
 
+})
+app.get("/viewreply", (req, res) => {
+    addrepliesmodel.find().then(
+        (data) => {
+            res.json(data)
+        }
+    ).catch((error) => {
+        res.json(error)
+    })
 })
 
 

@@ -180,6 +180,8 @@ app.post("/queries",(req,res)=>{
 
 })
 
+
+
 //addreply
 app.post("/addreply",(req,res)=>{
     let input=req.body

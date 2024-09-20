@@ -140,13 +140,25 @@ app.post("/organizationlogin", (req, res) => {
 })
 
 // feedback
-app.post("/feedback",(req,res)=>{
+app.post("/addfeedback",(req,res)=>{
     let input=req.body
     console.log(input)
     let feedback=new feedbacksmodel(input)
     feedback.save()
     res.json({"status":"success"})
 })
+
+app.get("/viewfeedback",(req,res)=>{
+    feedbacksmodel.find().then(
+      (data)=>{
+          res.json(data)
+      }
+    ).catch((error)=>{
+  
+      res.json(error)
+    })  
+  })
+  
 
 // add street light
 app.post("/addstreetlight",(req,res)=>{

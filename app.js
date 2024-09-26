@@ -111,43 +111,6 @@ app.post("/userlogin", (req, res) => {
     }).catch()
 })
 
-// commonlogin
-app.post("/commonloginsignup",async(req,res)=>{
-    let input=req.body
-    let hashedPassword=await generateHashedPassword(input.orgpassword)
-    console.log(hashedPassword)
-    input.orgpassword=hashedPassword
-    let commonlogin=new commonloginsmodel(input)
-    commonlogin.save()
-    res.json({"status":"success"})
-})
-
-//common lghin login
-app.post("/commonloginlogin", (req, res) => {
-    let input = req.body
-    commonloginsmodel.find({ "orgmail": req.body.orgmail }).then((response) => {
-        if (response.length > 0) {
-            let dborgPassword = response[0].orgpassword
-            console.log(dborgPassword)
-            bcrypt.compare(input.orgpassword, dborgPassword, (error, isMatch) => {
-                if (isMatch) {
-                    jwt.sign({ email: input.orgmail }, "commonlogin-app", { expiresIn: "1d" }, (error, token) => {
-                        if (error) {
-                            res.json({ "status": "Unable To create Token" })
-                        } else {
-                            res.json({ "status": "success", "userId": response[0]._id, "token": token })
-                        }
-                    })
-
-                } else {
-                    res.json({ "status": "Incorrect Password" })
-                }
-            })
-        } else {
-            res.json({ "status": "User Not Found" })
-        }
-    }).catch()
-})
 
 
 

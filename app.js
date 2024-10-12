@@ -3,6 +3,7 @@ const mongoose = require("mongoose")
 const cors = require("cors")
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs") //encryption
+const axios=require("axios")
 
 const { usersmodel } = require("./models/user")
 const{organizationsmodel}=require("./models/organization")
@@ -11,7 +12,7 @@ const {feedbacksmodel}=require("./models/feedback")
 const {addstreetlightsmodel}=require("./models/addstreetlight")
 const { queriesmodel } = require("./models/query")
 const { addrepliesmodel } = require("./models/addreply")
-const {commonloginsmodel}=require("./models/commonlogin")
+
 
 const app = express()
 app.use(cors())
@@ -197,23 +198,23 @@ app.get("/viewfeedback",(req,res)=>{
   
 
 // add street light
-app.post("/addstreetlight",(req,res)=>{
-    let input=req.body
-    console.log(input)
-    let addstreetlight=new addstreetlightsmodel(input)
-    addstreetlight.save()
-    res.json({"status":"success"})
+// app.post("/addstreetlight",(req,res)=>{
+//     let input=req.body
+//     console.log(input)
+//     let addstreetlight=new addstreetlightsmodel(input)
+//     addstreetlight.save()
+//     res.json({"status":"success"})
 
-})
-app.get("/viewstreetlight", (req, res) => {
-    addstreetlightsmodel.find().then(
-        (data) => {
-            res.json(data)
-        }
-    ).catch((error) => {
-        res.json(error)
-    })
-})
+// })
+// app.get("/viewstreetlight", (req, res) => {
+//     addstreetlightsmodel.find().then(
+//         (data) => {
+//             res.json(data)
+//         }
+//     ).catch((error) => {
+//         res.json(error)
+//     })
+// })
 
 
 //requests
@@ -255,7 +256,77 @@ app.get("/viewreply", (req, res) => {
     })
 })
 
+// Fetch live data from ThingSpeak
+const fetchThingSpeakData = async (channelId) => {
+    const apiUrl = `https://api.thingspeak.com/channels/${channelId}/fields/1/last.json`;
+    try {
+        const response = await axios.get(apiUrl);
+        const fieldValue = parseFloat(response.data.field1); // Convert to a number
 
-app.listen(8080, () => {
+        // Check the value and determine the status
+        if (fieldValue > 100) {
+            return 'on'; // Status is "on" if value is greater than 100
+        } else {
+            return 'off'; // Status is "off" if value is less than or equal to 100
+        }
+    } catch (error) {
+      console.error(`Error fetching data from ThingSpeak for channel ${channelId}:`, error);
+      return 'unknown';  // Default in case of error
+    }
+  };
+
+  // API to get the status of all streetlights (including live data from ThingSpeak)
+app.get('/viewstreetlights', async (req, res) => {
+    try {
+        const streetlights = await addstreetlightsmodel.find();
+
+        // Fetch the live status for each streetlight from ThingSpeak
+        const updatedStreetlights = await Promise.all(
+            streetlights.map(async (streetlight) => {
+                const liveStatus = await fetchThingSpeakData(streetlight.thingspeakChannelId);
+                return {
+                    id: streetlight.id,
+                    status: liveStatus,  // Update with live status from ThingSpeak
+                    thingspeakChannelId: streetlight.thingspeakChannelId,
+                    location: streetlight.location, // Include location
+                };
+            })
+        );
+
+        res.json(updatedStreetlights);
+    } catch (error) {
+        console.error('Error fetching streetlights:', error);
+        res.status(500).json({ message: 'Error fetching streetlights' });
+    }
+});
+
+
+
+ 
+  
+// API to add a new streetlight with ThingSpeak Channel ID
+app.post('/addstreetlights', async (req, res) => {
+    const { id, thingspeakChannelId } = req.body;
+    let input=req.body
+    console.log(input)
+  
+    try {
+      const newStreetlight = new addstreetlightsmodel(input);
+      await newStreetlight.save();
+  
+      // Respond with the created streetlight and a success status
+      res.json({
+        streetlight: newStreetlight,
+        status: "success"
+      });
+    } catch (error) {
+      console.error('Error adding streetlight:', error);
+      res.status(500).json({ message: 'Error adding streetlight' });
+    }
+  });
+
+
+
+app.listen(8082, () => {
     console.log("server started")
 })

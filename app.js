@@ -197,25 +197,6 @@ app.get("/viewfeedback",(req,res)=>{
   })
   
 
-// add street light
-// app.post("/addstreetlight",(req,res)=>{
-//     let input=req.body
-//     console.log(input)
-//     let addstreetlight=new addstreetlightsmodel(input)
-//     addstreetlight.save()
-//     res.json({"status":"success"})
-
-// })
-// app.get("/viewstreetlight", (req, res) => {
-//     addstreetlightsmodel.find().then(
-//         (data) => {
-//             res.json(data)
-//         }
-//     ).catch((error) => {
-//         res.json(error)
-//     })
-// })
-
 
 //requests
 app.post("/addqueries",(req,res)=>{

@@ -227,6 +227,21 @@ app.post("/addreply",(req,res)=>{
     res.json({"status":"success"})
 
 })
+
+//search reply
+app.post("/Searchreply", (req, res) => {
+    let input = req.body
+    addrepliesmodel.find(input).then(
+        (data) => {
+            res.json(data)
+        }
+    ).catch(
+        (error) => {
+            res.json(error)
+        }
+    )
+})
+
 app.get("/viewreply", (req, res) => {
     addrepliesmodel.find().then(
         (data) => {
@@ -308,6 +323,7 @@ app.post('/addstreetlights', async (req, res) => {
 
 
 
-app.listen(8082, () => {
+
+app.listen(8080, () => {
     console.log("server started")
 })

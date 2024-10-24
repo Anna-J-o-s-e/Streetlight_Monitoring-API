@@ -112,7 +112,23 @@ app.post("/userlogin", (req, res) => {
     }).catch()
 })
 
+// DELETE API to remove a user
+app.delete('/api/users/:uadmsno', async (req, res) => {
+    const { uadmsno } = req.params;
 
+    try {
+        // Find and delete user by uadmsno
+        const deletedUser = await usersmodel.findOneAndDelete({ uadmsno });
+
+        if (!deletedUser) {
+            return res.status(404).json({ message: 'User not found!' });
+        }
+
+        return res.status(200).json({ message: 'User deleted successfully!', data: deletedUser });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error deleting user', error });
+    }
+});
 
 
 app.get("/viewusers",(req,res)=>{
@@ -175,6 +191,25 @@ app.get("/vieworganization",(req,res)=>{
       res.json(error)
     })  
   })
+
+// DELETE API to remove an organization
+app.delete('/api/organizations/:oid', async (req, res) => {
+    const { oid } = req.params;
+
+    try {
+        // Find and delete organization by oid
+        const deletedOrganization = await organizationsmodel.findOneAndDelete({ oid });
+
+        if (!deletedOrganization) {
+            return res.status(404).json({ message: 'Employee not found!' });
+        }
+
+        return res.status(200).json({ message: 'Employee deleted successfully!', data: deletedOrganization });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error deleting Employee', error });
+    }
+});
+
 
 // feedback
 app.post("/addfeedback",(req,res)=>{

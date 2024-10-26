@@ -259,6 +259,8 @@ app.get("/viewqueries", (req, res) => {
     })
 })
 
+
+
 //addreply
 app.post("/addreply",(req,res)=>{
     let input=req.body

@@ -84,33 +84,39 @@ app.post("/usersignup",async(req,res)=>{
     user.save()
     res.json({"status":"success"})
 })
-
-//user login
-app.post("/userlogin", (req, res) => {
-    let input = req.body
-    usersmodel.find({ "umail": req.body.umail }).then((response) => {
-        if (response.length > 0) {
-            let dbuPassword = response[0].upassword
-            console.log(dbuPassword)
-            bcrypt.compare(input.upassword, dbuPassword, (error, isMatch) => {
-                if (isMatch) {
-                    jwt.sign({ email: input.umail }, "user-app", { expiresIn: "1d" }, (error, token) => {
-                        if (error) {
-                            res.json({ "status": "Unable To create Token" })
-                        } else {
-                            res.json({ "status": "success", "userId": response[0]._id, "token": token })
-                        }
-                    })
-
-                } else {
-                    res.json({ "status": "Incorrect Password" })
-                }
-            })
-        } else {
-            res.json({ "status": "User Not Found" })
+// Backend (Express.js)
+app.post("/userlogin", async (req, res) => {
+    const { umail, upassword } = req.body;
+    try {
+        const user = await usersmodel.findOne({ umail: umail });
+        if (!user) {
+            return res.json({ "status": "User Not Found" });
         }
-    }).catch()
-})
+
+        const isMatch = await bcrypt.compare(upassword, user.upassword);
+        if (isMatch) {
+            // Return user details upon successful login
+            return res.json({
+                "status": "success",
+                userId: user._id,
+                uname:user.uname,
+                umail: user.umail,
+                uaddress: user.uaddress,
+                uphone: user.uphone,
+                utype: user.utype,
+                uadmsno: user.uadmsno
+            });
+        } else {
+            return res.json({ "status": "Incorrect Password" });
+        }
+    } catch (error) {
+        console.error("Error during user login:", error);
+        return res.status(500).json({ message: "Server Error" });
+    }
+});
+
+
+
 
 // DELETE API to remove a user
 app.delete('/api/users/:uadmsno', async (req, res) => {
@@ -286,44 +292,61 @@ app.get("/viewreply", (req, res) => {
         res.json(error)
     })
 })
-
-// Fetch live data from ThingSpeak
+// Function to fetch live data from ThingSpeak
 const fetchThingSpeakData = async (channelId) => {
-    const apiUrl = `https://api.thingspeak.com/channels/${channelId}/fields/1/last.json`;
     try {
-        const response = await axios.get(apiUrl);
-        const fieldValue = parseFloat(response.data.field1); // Convert to a number
+        // Make the API call to ThingSpeak
+        const response = await axios.get(`https://api.thingspeak.com/channels/${channelId}/fields/1/last.json`);
+        
+        console.log(`Response from ThingSpeak for channel ${channelId}:`, response.data); // Debugging
+        
+        // Check if response data is available and valid
+        if (response.data && response.data.field1) {
+            const statusValue = parseInt(response.data.field1, 10); // Parse as integer
+            
+            // Debug the parsed status value
+            console.log(`Parsed status value for channel ${channelId}:`, statusValue);
 
-        // Check the value and determine the status
-        if (fieldValue > 100) {
-            return 'on'; // Status is "on" if value is greater than 100
+            // Determine status based on the value
+            const status = (!isNaN(statusValue) && statusValue > 100) ? 'ON' : 'OFF'; // Update status based on value
+            return status; // Return only the status
         } else {
-            return 'off'; // Status is "off" if value is less than or equal to 100
+            // No valid data found, set status to OFF
+            console.warn(`No valid data found for channel ${channelId}. Setting status to OFF.`);
+            return 'OFF';
         }
     } catch (error) {
-      console.error(`Error fetching data from ThingSpeak for channel ${channelId}:`, error);
-      return 'unknown';  // Default in case of error
+        // Log the error for debugging
+        console.error(`Error fetching data from ThingSpeak for channel ${channelId}:`, error);
+        return 'OFF'; // Default value in case of an error
     }
-  };
+};
 
-  // API to get the status of all streetlights (including live data from ThingSpeak)
+// API to get the status of all streetlights (including live data from ThingSpeak)
 app.get('/viewstreetlights', async (req, res) => {
     try {
+        // Fetch all streetlights from the database
         const streetlights = await addstreetlightsmodel.find();
 
         // Fetch the live status for each streetlight from ThingSpeak
         const updatedStreetlights = await Promise.all(
             streetlights.map(async (streetlight) => {
-                const liveStatus = await fetchThingSpeakData(streetlight.thingspeakChannelId);
+                const status = await fetchThingSpeakData(streetlight.thingspeakChannelId); // Get status
+                console.log(`Live status for ${streetlight.thingspeakChannelId}:`, status); // Debugging
+
+                // Update the status of the streetlight based on live data
                 return {
                     id: streetlight.id,
-                    status: liveStatus,  // Update with live status from ThingSpeak
+                    fname: streetlight.fname,
+                    status: status,  // Use live data to update status
                     thingspeakChannelId: streetlight.thingspeakChannelId,
-                    location: streetlight.location, // Include location
+                    location: streetlight.location,
+                    date: streetlight.date
                 };
             })
         );
 
+        // Send the updated streetlights data as a response
         res.json(updatedStreetlights);
     } catch (error) {
         console.error('Error fetching streetlights:', error);
@@ -355,6 +378,8 @@ app.post('/addstreetlights', async (req, res) => {
       res.status(500).json({ message: 'Error adding streetlight' });
     }
   });
+
+  
 
 
 
